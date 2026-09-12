@@ -97,7 +97,7 @@ RUN \
     \
     && apt-get install -y --no-install-recommends \
         build-essential=12.12 \
-        libpcre2-dev=10.46-1~deb13u1 \
+        libpcre2-dev=10.46-1~deb13u2 \
         python3-dev=3.13.5-1 \
     \
     && uv venv --seed --python python3.13 "${VIRTUAL_ENV}" \
@@ -217,12 +217,12 @@ RUN \
     && apt-get install -y --no-install-recommends \
         ffmpeg=7:7.1.5-0+deb13u1 \
         libargtable2-0=13-4 \
-        libpcre2-8-0=10.46-1~deb13u1 \
-        libpython3.13=3.13.5-2+deb13u4 \
-        nginx=1.26.3-3+deb13u7 \
+        libpcre2-8-0=10.46-1~deb13u2 \
+        libpython3.13=3.13.5-2+deb13u5 \
+        nginx=1.26.3-3+deb13u8 \
         postgresql-17=17.11-1.pgdg13+2 \
         procps=2:4.0.4-9 \
-        python3.13=3.13.5-2+deb13u4 \
+        python3.13=3.13.5-2+deb13u5 \
         redis-server=5:8.0.2-3+deb13u2 \
         vlc-bin=3.0.23-0+deb13u1 \
         vlc-plugin-base=3.0.23-0+deb13u1 \
