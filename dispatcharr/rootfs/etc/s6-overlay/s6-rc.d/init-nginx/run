@@ -4,7 +4,7 @@
 # Home Assistant Community App: Dispatcharr
 # Configures NGINX for use with Dispatcharr
 # ==============================================================================
-declare public_url
+declare public_url=""
 declare address
 
 # The address everything outside Home Assistant reaches this app at: the
@@ -15,7 +15,9 @@ declare address
 #
 # Configured by hand when this app sits behind a reverse proxy or answers to a
 # name; worked out from the network otherwise, which is right for the ordinary
-# case of a machine on your own network.
+# case of a machine on your own network. That lookup is a Supervisor API call,
+# which is what hassio_api in the configuration is for; without it the answer
+# is "forbidden" and the warning below is what the user sees.
 if bashio::config.has_value 'base_url'; then
     public_url=$(bashio::config 'base_url')
     public_url="${public_url%/}"
