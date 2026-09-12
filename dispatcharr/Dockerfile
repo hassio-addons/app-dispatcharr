@@ -217,7 +217,7 @@ RUN \
     && apt-get install -y --no-install-recommends \
         ffmpeg=7:7.1.5-0+deb13u1 \
         libargtable2-0=13-4 \
-        libpcre2-8-0=10.46-1~deb13u1 \
+        libpcre2-8-0=10.46-1~deb13u2 \
         libpython3.13=3.13.5-2+deb13u4 \
         nginx=1.26.3-3+deb13u7 \
         postgresql-17=17.11-1.pgdg13+2 \
