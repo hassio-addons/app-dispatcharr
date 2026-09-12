@@ -1,0 +1,18 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# ==============================================================================
+# Home Assistant Community App: Dispatcharr
+# Runs the Celery worker
+# ==============================================================================
+
+# Refreshing a playlist, pulling a programme guide and matching channels to it
+# all happen out here rather than in a request.
+bashio::log.info "Starting the Celery worker..."
+
+cd /app \
+    || bashio::exit.nok "Could not change to the application directory"
+
+exec celery -A dispatcharr worker \
+    --queues celery \
+    --hostname "default@%h" \
+    --autoscale 6,1

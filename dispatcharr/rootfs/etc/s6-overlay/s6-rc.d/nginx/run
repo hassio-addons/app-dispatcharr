@@ -1,0 +1,13 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# ==============================================================================
+# Home Assistant Community App: Dispatcharr
+# Runs the NGINX daemon
+# ==============================================================================
+
+# Wait for Dispatcharr to come up. The first start after an update runs the
+# database migrations before it begins listening.
+bashio::net.wait_for 5656 127.0.0.1 900
+
+bashio::log.info "Starting NGINX..."
+exec nginx

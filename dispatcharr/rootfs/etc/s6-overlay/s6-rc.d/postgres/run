@@ -1,0 +1,21 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# ==============================================================================
+# Home Assistant Community App: Dispatcharr
+# Runs PostgreSQL
+# ==============================================================================
+
+# Only ever reachable over a socket inside this app. An empty listen_addresses
+# turns the network listener off entirely, which is why nothing here needs a
+# password: there is no way in from outside the container to use one on.
+mkdir -p /run/postgresql
+chown postgres:postgres /run/postgresql
+chmod 2775 /run/postgresql
+
+bashio::log.info "Starting PostgreSQL..."
+
+exec s6-setuidgid postgres \
+    "/usr/lib/postgresql/${PG_MAJOR}/bin/postgres" \
+        -D /data/postgres \
+        -c listen_addresses= \
+        -c unix_socket_directories=/run/postgresql

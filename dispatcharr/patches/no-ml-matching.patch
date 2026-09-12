@@ -1,0 +1,27 @@
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -28,8 +28,6 @@
+     "regex",
+     "tzlocal",
+     "pytz",
+-    "torch==2.13.0+cpu",
+-    "sentence-transformers==5.6.1",
+     "channels",
+     "channels-redis==4.3.0",
+     "django-filter",
+@@ -43,15 +41,6 @@
+ requires = ["hatchling"]
+ build-backend = "hatchling.build"
+ 
+-# PyTorch CPU-only wheels index
+-[[tool.uv.index]]
+-url = "https://download.pytorch.org/whl/cpu"
+-name = "pytorch-cpu"
+-explicit = true
+-
+-[tool.uv.sources]
+-torch = { index = "pytorch-cpu" }
+-
+ [tool.hatch.build.targets.wheel]
+ packages = ["dispatcharr", "apps", "core"]
+ 

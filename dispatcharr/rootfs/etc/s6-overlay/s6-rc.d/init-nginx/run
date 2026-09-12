@@ -1,0 +1,64 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# ==============================================================================
+# Home Assistant Community App: Dispatcharr
+# Configures NGINX for use with Dispatcharr
+# ==============================================================================
+declare public_url
+declare address
+
+# The address everything outside Home Assistant reaches this app at: the
+# players, Plex, Emby, Jellyfin and anything pointed at the HDHomeRun. It is
+# what the M3U, EPG and HDHomeRun links in the interface are built from, and it
+# is deliberately never the Ingress path, which is tied to a browser session
+# and authenticated by Home Assistant.
+#
+# Configured by hand when this app sits behind a reverse proxy or answers to a
+# name; worked out from the network otherwise, which is right for the ordinary
+# case of a machine on your own network.
+if bashio::config.has_value 'base_url'; then
+    public_url=$(bashio::config 'base_url')
+    public_url="${public_url%/}"
+else
+    for address in $(bashio::network.ipv4_address); do
+        # 169.254.0.0/16 per RFC 3927 is link local, and nothing can route to it
+        if [[ "${address}" == 169.254.* ]]; then
+            continue
+        fi
+        public_url="http://${address%/*}:9191"
+        break
+    done
+
+    if bashio::var.has_value "${public_url}"; then
+        bashio::log.info "Publishing links to players as: ${public_url}"
+    else
+        bashio::log.warning \
+            "Could not work out the address to hand to players." \
+            "The M3U, EPG and HDHomeRun links shown in the interface will" \
+            "point at whatever address you are viewing it from, which is" \
+            "wrong when that is Ingress. Set the 'base_url' option to fix it."
+    fi
+fi
+
+# Generate Ingress configuration
+bashio::var.json \
+    interface "$(bashio::app.ip_address)" \
+    port "^$(bashio::app.ingress_port)" \
+    public_url "${public_url:-}" \
+    | tempio \
+        -template /etc/nginx/templates/ingress.gtpl \
+        -out /etc/nginx/servers/ingress.conf
+
+# The direct server is what this app is actually for. Everything that plays a
+# stream comes in here: an Ingress path is bound to a browser session, so it is
+# of no use to a television, a phone app or a media server.
+bashio::config.require.ssl
+
+bashio::var.json \
+    certfile "$(bashio::config 'certfile')" \
+    keyfile "$(bashio::config 'keyfile')" \
+    port "^9191" \
+    ssl "^$(bashio::config 'ssl')" \
+    | tempio \
+        -template /etc/nginx/templates/direct.gtpl \
+        -out /etc/nginx/servers/direct.conf

@@ -1,0 +1,122 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# ==============================================================================
+# Home Assistant Community App: Dispatcharr
+# Prepares the data directory and the database cluster
+# ==============================================================================
+declare log_level
+declare pg_existing
+declare pg_major
+declare secret_key
+
+# Everything Dispatcharr keeps lives here: the database, the artwork it has
+# fetched, uploaded playlists, plugins, backups and the DVR's recordings.
+mkdir -p \
+    /data/backups \
+    /data/cache \
+    /data/logos \
+    /data/plugins \
+    /data/recordings \
+    /data/uploads
+
+# Where the uWSGI socket NGINX talks to is put.
+mkdir -p /run/dispatcharr
+
+# Django signs sessions and every JWT it issues with this. It has to outlive a
+# restart, or everybody is logged out each time the app comes back.
+if ! bashio::fs.file_exists /data/secret_key; then
+    bashio::log.info "Generating a secret key..."
+    python -c 'import secrets; print(secrets.token_urlsafe(64))' \
+        > /data/secret_key
+    chmod 600 /data/secret_key
+fi
+secret_key=$(</data/secret_key)
+printf "%s" "${secret_key}" \
+    > /var/run/s6/container_environment/DJANGO_SECRET_KEY
+
+# The database is reached over a socket inside this app, so there is no host,
+# no port and no password anywhere in this. Django is handed the socket
+# directory as its host, which is how psycopg is told to use one.
+printf "%s" "/run/postgresql" \
+    > /var/run/s6/container_environment/POSTGRES_HOST
+printf "%s" "dispatcharr" \
+    > /var/run/s6/container_environment/POSTGRES_DB
+printf "%s" "dispatcharr" \
+    > /var/run/s6/container_environment/POSTGRES_USER
+
+# Read off what is actually installed rather than written down here, so this
+# can never drift from the version the image was built with.
+pg_major=$(find /usr/lib/postgresql -maxdepth 1 -mindepth 1 -type d -printf '%f\n' \
+    | sort -V | tail -n 1)
+printf "%s" "${pg_major}" > /var/run/s6/container_environment/PG_MAJOR
+
+# PostgreSQL cannot read a data directory written by a different major version,
+# and an app update is the worst possible moment to discover that. Stopping
+# here with an explanation beats letting PostgreSQL fail with something the
+# logs make look like corruption.
+#
+# The release that actually moves between majors has to loosen this to let its
+# own upgrade step run. POSTGRES-UPGRADE.md covers what that involves.
+if bashio::fs.file_exists /data/postgres/PG_VERSION; then
+    pg_existing=$(</data/postgres/PG_VERSION)
+    if [[ "${pg_existing}" != "${pg_major}" ]]; then
+        bashio::log.fatal
+        bashio::log.fatal "This app now ships PostgreSQL ${pg_major}, but the database in"
+        bashio::log.fatal "/data was written by PostgreSQL ${pg_existing}."
+        bashio::log.fatal
+        bashio::log.fatal "PostgreSQL cannot read a data directory from another major"
+        bashio::log.fatal "version, and this app will not convert one behind your back."
+        bashio::log.fatal "Roll back to the previous version of this app, which will start"
+        bashio::log.fatal "normally, and follow the upgrade steps in its release notes."
+        bashio::log.fatal
+        bashio::exit.nok "Refusing to start on a PostgreSQL ${pg_existing} database"
+    fi
+fi
+
+# The cluster itself, made once on the first ever start. Local connections are
+# trusted because the only way to make one is to already be inside this app.
+if ! bashio::fs.directory_exists /data/postgres/base; then
+    bashio::log.info "Creating the database, this happens once..."
+
+    mkdir -p /data/postgres
+    chown postgres:postgres /data/postgres
+    chmod 700 /data/postgres
+
+    # Both --locale and --data-checksums matter beyond this one command,
+    # because pg_upgrade refuses to run when the old and the new cluster
+    # disagree on either. The locale is spelled out rather than inherited from
+    # LANG so that it cannot drift with the base image, and checksums are on
+    # both because storage under Home Assistant is often an SD card worth
+    # catching corruption on, and because PostgreSQL 18 turns them on by
+    # default, which is what a future cluster would have to match.
+    s6-setuidgid postgres "/usr/lib/postgresql/${pg_major}/bin/initdb" \
+        --pgdata=/data/postgres \
+        --encoding=UTF8 \
+        --locale=C.UTF-8 \
+        --data-checksums \
+        --auth-local=trust \
+        --auth-host=reject \
+        || bashio::exit.nok "Failed creating the database"
+fi
+
+# A restore from a backup, or an app update, can leave these owned by somebody
+# else. PostgreSQL refuses to start on a directory it does not own.
+chown -R postgres:postgres /data/postgres
+chmod 700 /data/postgres
+
+# Dispatcharr wants Python's own level names rather than this app's.
+log_level="INFO"
+case "$(bashio::string.lower "$(bashio::config 'log_level' 'info')")" in
+    trace|debug)    log_level="DEBUG" ;;
+    info|notice)    log_level="INFO" ;;
+    warning)        log_level="WARNING" ;;
+    error)          log_level="ERROR" ;;
+    fatal)          log_level="CRITICAL" ;;
+esac
+printf "%s" "${log_level}" \
+    > /var/run/s6/container_environment/DISPATCHARR_LOG_LEVEL
+
+# Recording schedules and the programme guide are only right if this app agrees
+# with Home Assistant about what time it is.
+printf "%s" "$(bashio::info.timezone)" \
+    > /var/run/s6/container_environment/TZ

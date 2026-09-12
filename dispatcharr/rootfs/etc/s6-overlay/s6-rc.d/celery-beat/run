@@ -1,0 +1,15 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# ==============================================================================
+# Home Assistant Community App: Dispatcharr
+# Runs the Celery scheduler
+# ==============================================================================
+
+# What decides that a playlist is due a refresh, or that a recording starts in
+# a minute. It only queues the work; the workers above do it.
+bashio::log.info "Starting the Celery scheduler..."
+
+cd /app \
+    || bashio::exit.nok "Could not change to the application directory"
+
+exec celery -A dispatcharr beat

@@ -1,0 +1,19 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# ==============================================================================
+# Home Assistant Community App: Dispatcharr
+# Runs Redis
+# ==============================================================================
+
+# Redis is here as plumbing rather than as storage: it is the Celery broker,
+# the Channels layer behind the WebSocket, and the cache. Nothing in it needs
+# to survive a restart, so it is told not to write to disk at all.
+bashio::log.info "Starting Redis..."
+
+exec redis-server \
+    --bind 127.0.0.1 \
+    --port 6379 \
+    --save '' \
+    --appendonly no \
+    --daemonize no \
+    --loglevel warning

@@ -1,0 +1,13 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# ==============================================================================
+# Home Assistant Community App: Dispatcharr
+# Runs the Dispatcharr server
+# ==============================================================================
+
+bashio::log.info "Starting Dispatcharr..."
+
+cd /app \
+    || bashio::exit.nok "Could not change to the application directory"
+
+exec uwsgi --ini /etc/dispatcharr/uwsgi.ini

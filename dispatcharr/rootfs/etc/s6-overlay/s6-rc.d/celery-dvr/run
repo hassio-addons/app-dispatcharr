@@ -1,0 +1,21 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# ==============================================================================
+# Home Assistant Community App: Dispatcharr
+# Runs the Celery worker for the DVR
+# ==============================================================================
+
+# A recording holds its task open for as long as the programme lasts, and does
+# almost nothing but wait on the network while it does. That is a thread pool's
+# job, and it is kept off the queue everything else runs on so an evening of
+# recordings cannot starve a playlist refresh.
+bashio::log.info "Starting the Celery worker for the DVR..."
+
+cd /app \
+    || bashio::exit.nok "Could not change to the application directory"
+
+exec celery -A dispatcharr worker \
+    --queues dvr \
+    --hostname "dvr@%h" \
+    --pool threads \
+    --concurrency 20

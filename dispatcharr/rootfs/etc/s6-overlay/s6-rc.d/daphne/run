@@ -1,0 +1,19 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# ==============================================================================
+# Home Assistant Community App: Dispatcharr
+# Runs the WebSocket server
+# ==============================================================================
+
+# The channel table, the stats page and the notifications are all fed from
+# here. Loopback only; NGINX is what faces Ingress and the network.
+bashio::log.info "Starting the WebSocket server..."
+
+cd /app \
+    || bashio::exit.nok "Could not change to the application directory"
+
+exec daphne \
+    --bind 127.0.0.1 \
+    --port 8001 \
+    --proxy-headers \
+    dispatcharr.asgi:application
