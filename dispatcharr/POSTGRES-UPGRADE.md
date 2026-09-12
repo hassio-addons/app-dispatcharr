@@ -47,11 +47,11 @@ dead on arrival.
 
 Three releases, not one.
 
-| release | ships | on start |
-| --- | --- | --- |
-| now | OLD only | refuse anything that is not OLD |
-| transition | OLD **and** NEW | upgrade OLD to NEW, then run |
-| later | NEW only | refuse anything that is not NEW |
+| release    | ships           | on start                        |
+| ---------- | --------------- | ------------------------------- |
+| now        | OLD only        | refuse anything that is not OLD |
+| transition | OLD **and** NEW | upgrade OLD to NEW, then run    |
+| later      | NEW only        | refuse anything that is not NEW |
 
 The transition release carries both majors, which costs roughly 50MB of image.
 **Keep it for a long window, months of releases rather than one.** Anybody who
