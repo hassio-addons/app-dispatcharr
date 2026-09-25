@@ -2,7 +2,7 @@ ARG BUILD_FROM=ghcr.io/hassio-addons/debian-base:9.4.0
 ARG DISPATCHARR_VERSION="0.30.0"
 
 # hadolint ignore=DL3006
-FROM ghcr.io/astral-sh/uv:0.12.18 AS uv
+FROM ghcr.io/astral-sh/uv:0.12.19 AS uv
 
 # Dispatcharr's frontend is a Vite application that is built up front and then
 # served as static files by the backend, so it has to exist before the runtime
