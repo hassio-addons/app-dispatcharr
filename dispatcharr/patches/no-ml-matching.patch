@@ -1,15 +1,15 @@
 --- a/pyproject.toml
 +++ b/pyproject.toml
-@@ -28,8 +28,6 @@
+@@ -29,8 +29,6 @@
      "regex",
      "tzlocal",
      "pytz",
--    "torch==2.13.0+cpu",
--    "sentence-transformers==5.6.1",
+-    "torch==2.14.0+cpu",
+-    "sentence-transformers==6.0.1",
      "channels",
      "channels-redis==4.3.0",
      "django-filter",
-@@ -43,15 +41,6 @@
+@@ -44,15 +42,6 @@
  requires = ["hatchling"]
  build-backend = "hatchling.build"
  
