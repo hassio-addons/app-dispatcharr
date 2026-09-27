@@ -219,13 +219,13 @@ RUN \
         libargtable2-0=13-4 \
         libpcre2-8-0=10.46-1~deb13u2 \
         libpython3.13=3.13.5-2+deb13u5 \
-        nginx=1.26.3-3+deb13u8 \
+        nginx=1.26.3-3+deb13u9 \
         postgresql-17=17.11-1.pgdg13+2 \
         procps=2:4.0.4-9 \
         python3.13=3.13.5-2+deb13u5 \
         redis-server=5:8.0.2-3+deb13u2 \
-        vlc-bin=3.0.23-0+deb13u1 \
-        vlc-plugin-base=3.0.23-0+deb13u1 \
+        vlc-bin=3.0.24-0+deb13u1 \
+        vlc-plugin-base=3.0.24-0+deb13u1 \
     \
     && rm -f -r /etc/nginx \
     \
